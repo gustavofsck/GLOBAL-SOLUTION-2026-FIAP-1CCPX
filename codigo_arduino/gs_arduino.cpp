@@ -2,7 +2,14 @@
 #include <Adafruit_LiquidCrystal.h>
 
 // defines
-#define OK_TEMP 984
+#define PIN_TEMP A0
+#define PIN_MOISTURE A1
+#define PIN_LIGHT_EXT A3
+#define PIN_LIGHT_INT A2
+#define PIN_MOISTURE_POWER 8   // digital
+#define PIN_VIBRATION 2
+#define MIN_OK_TEMP 18
+#define MAX_OK_TEMP 30
 #define OK_VIBRATION 700
 #define MAX_LIGHT 100
 #define MIN_LIGHT 20
@@ -42,23 +49,19 @@ void setup()
 {
   Serial.begin(9600);
 
-  // these 2 are the moisture sensor
-  pinMode(A0, OUTPUT);
-  pinMode(A1, INPUT);
+  pinMode(PIN_MOISTURE_POWER, OUTPUT);
+  pinMode(PIN_VIBRATION, INPUT_PULLUP);
+
+  pinMode(PIN_MOISTURE, INPUT);
+  pinMode(PIN_TEMP, INPUT);
 
   lcd_1.begin(16, 2);
 
   // EXTERNAL LIGHT SENSOR AS INPUT
-  pinMode(A3, INPUT);
+  pinMode(PIN_LIGHT_EXT, INPUT);
 
   // INTERNAL LIGHT SENSOR AS INPUT
-  pinMode(A2, INPUT);
-
-  // vibration sensor
-  pinMode(A4, INPUT);
-
-  // temperature sensor
-  pinMode(A5, INPUT);
+  pinMode(PIN_LIGHT_INT, INPUT);
 }
 
 // checks for abnormalities regarding the 
@@ -137,19 +140,22 @@ bool check_moisture_level(bool print, int sensor_moisture)
 // and prints the results of the check on screen
 bool check_temperature_level(bool print, int sensor_tempereature)
 {
-  if(sensor_tempereature > OK_TEMP)
+  float voltage = sensor_tempereature * (5.0 / 1023.0);
+  float celcius_temp = (voltage - 0.5) * 100.0;
+
+  if(celcius_temp > MAX_OK_TEMP)
   {
     if(print)
       print_to_screen("TEMPERATURA:", "ALTA");
 
-  }else if(sensor_tempereature < OK_TEMP){
+  }else if(celcius_temp >= MIN_OK_TEMP && celcius_temp <= MAX_OK_TEMP){
+
+    return true;
+
+  }else{
 
     if(print)
  	    print_to_screen("TEMPERATURA:", "BAIXA");
-
-  }else{
-    
-    return true;
 
   }
 
@@ -160,7 +166,7 @@ bool check_temperature_level(bool print, int sensor_tempereature)
 // and prints the results of the check on screen
 bool check_vibratiton_level(bool print, int sensor_vibration)
 {
-  if(OK_VIBRATION > sensor_vibration)
+  if(sensor_vibration == LOW)
   {
     if(print)
       print_to_screen("VIBRACAO:", "ALTA");
@@ -201,14 +207,14 @@ int handle_status(bool check_status, bool& old_check_status, const char* msg1, c
   return !check_status;
 }
 
-// little inline function to print out temperature and moisture to the serial
-// it also calculates the temperature from the sensor in celcius
-// we print to the serial, to again avoid cluttering the small lcd screen
 inline void print_readings_to_serial(int moisture, int tempereature) 
 {
-  float celcius_temp = map(((tempereature - 20) * 3.04), 0, 1023, -40, 125);
+  float voltage = tempereature * (5.0 / 1023.0);
+  float celcius_temp = (voltage - 0.5) * 100.0;
+  int moisture_pct = map(moisture, 0, 1023, 0, 100);
+
   Serial.print("Leituras do sensor de umidade: ");
-  Serial.println(moisture);
+  Serial.println(moisture_pct);
 
   Serial.print("Leituras do sensor de temperatura: ");
   Serial.println(celcius_temp);
@@ -228,14 +234,14 @@ void loop()
   lcd_1.clear();
 
   // Apply power to the soil moisture sensor
-  digitalWrite(A0, HIGH);
+  digitalWrite(PIN_MOISTURE_POWER, HIGH);
 
   // collect data from all our sensors
-  const int sensor_moisture = analogRead(A1);
-  const int sensor_tempereature = analogRead(A5);
-  const int sensor_light_ext = analogRead(A3);
-  const int sensor_light_int = analogRead(A2);
-  const int sensor_vibration = analogRead(A4);
+  const int sensor_moisture = analogRead(PIN_MOISTURE);
+  const int sensor_tempereature = analogRead(PIN_TEMP);
+  const int sensor_light_ext = analogRead(PIN_LIGHT_EXT);
+  const int sensor_light_int = analogRead(PIN_LIGHT_INT);
+  int sensor_vibration = digitalRead(PIN_VIBRATION); 
 
   print_readings_to_serial(sensor_moisture, sensor_tempereature);
 
