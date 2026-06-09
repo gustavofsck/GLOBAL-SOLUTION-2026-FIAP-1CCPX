@@ -10,8 +10,8 @@ Computer Organization and Architecture
 
 
 **Links**
-  * tinkecad: https://www.tinkercad.com/things/78FLZsZbruO-gs-computer-organization-amp-archictecture?sharecode=1R3nrVnBFfIoEPvSgPQy8nCn14Le0U5BViN3dl9gaT0
-
+  * tinkecad: https://www.tinkercad.com/things/5bIucXV9ysW-gs-computer-organization-ampampamp-archictecture?sharecode=nAvVpKdRehxbRUt6QccxaCojRk7UbvhDVApjoPmSQF4
+    
 **Objetivo do Projeto**
 
 Desenvolver um sistema embarcado para monitoramento em tempo real das condições internas de uma cápsula espacial (simulada) com os seguintes objetivos específicos:
