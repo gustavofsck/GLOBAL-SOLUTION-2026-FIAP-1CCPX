@@ -72,7 +72,7 @@ bool check_ext_light_level(bool print, int sensor_light_ext)
       print_to_screen("LUMINOSIDADE", "EXTERNA: ALTA");
       
 
-  }else if(sensor_light_ext > MIN_LIGHT && sensor_light_ext < MAX_LIGHT){
+  }else if(sensor_light_ext >= MIN_LIGHT && sensor_light_ext <= MAX_LIGHT){
 
     return true;
     
@@ -97,7 +97,7 @@ bool check_int_light_level(bool print, int sensor_light_int)
     if(print)
       print_to_screen("LUMINOSIDADE", "INTERNA: ALTA");
 
-  }else if(sensor_light_int > MIN_LIGHT && sensor_light_int < MAX_LIGHT){
+  }else if(sensor_light_int >= MIN_LIGHT && sensor_light_int <= MAX_LIGHT){
 
     return true;
     
@@ -117,16 +117,16 @@ bool check_moisture_level(bool print, int sensor_moisture)
    if(sensor_moisture < MIN_MOIST)
   {  
     if(print)
-  	  print_to_screen("HUMIDADE:", "BAIXA");
+  	  print_to_screen("UMIDADE:", "BAIXA");
     
-  }else if(sensor_moisture > MIN_MOIST && sensor_moisture < MAX_MOIST){
+  }else if(sensor_moisture >= MIN_MOIST && sensor_moisture <= MAX_MOIST){
     
     return true;
 
   }else{
 
     if(print)
-      print_to_screen("HUMIDADE:", "ALTA");
+      print_to_screen("UMIDADE:", "ALTA");
 
   }
   
@@ -201,6 +201,20 @@ int handle_status(bool check_status, bool& old_check_status, const char* msg1, c
   return !check_status;
 }
 
+// little inline function to print out temperature and moisture to the serial
+// it also calculates the temperature from the sensor in celcius
+// we print to the serial, to again avoid cluttering the small lcd screen
+inline void print_readings_to_serial(int moisture, int tempereature) 
+{
+  float celcius_temp = map(((tempereature - 20) * 3.04), 0, 1023, -40, 125);
+  Serial.print("Leituras do sensor de umidade: ");
+  Serial.println(moisture);
+
+  Serial.print("Leituras do sensor de temperatura: ");
+  Serial.println(celcius_temp);
+
+}
+
 // here we loop through our sensors
 // for updated data, and feed our checkers
 // that new data, if something is off
@@ -223,6 +237,8 @@ void loop()
   const int sensor_light_int = analogRead(A2);
   const int sensor_vibration = analogRead(A4);
 
+  print_readings_to_serial(sensor_moisture, sensor_tempereature);
+
   // declare our static return values of our checker functions
   // static is preffered here because it provideas better incapsulation
   // also this only initializtion, meaning it wont keep calling the functions
@@ -237,7 +253,7 @@ void loop()
   int faults = 0;
 
   // checks the moisture status
-  faults += handle_status(check_moisture_level(PRINT, sensor_moisture), old_moisture_res, "HUMIDADE:", "OK");
+  faults += handle_status(check_moisture_level(PRINT, sensor_moisture), old_moisture_res, "UMIDADE:", "OK");
 
   // checks the temperature status
   faults += handle_status(check_temperature_level(PRINT, sensor_tempereature), old_tempereature_res, "TEMPERATURA:", "OK");
